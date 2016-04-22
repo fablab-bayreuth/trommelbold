@@ -1,0 +1,2 @@
+python  sequencer.py
+pause
