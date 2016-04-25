@@ -1,6 +1,5 @@
 Trommelbold Arduino firmware
 
-
 Drum control is encapsuled in class Trommelbold in file trommelbold.h
 At the moment, this file is included in all sketch directories, (until
 I find out how to reference other diretories from within an Arduino sketch.)

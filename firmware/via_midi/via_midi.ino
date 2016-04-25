@@ -88,7 +88,7 @@ int8_t midi_note_to_drum(uint8_t note)
     
 
 
-void print_midil(uint8_t stat, uint8_t data1, uint8_t data2)
+void print_midi(uint8_t stat, uint8_t data1, uint8_t data2)
 {
   Serial.print("MIDI: ");
   Serial.print(to_hex((stat>>4)&0x0f));

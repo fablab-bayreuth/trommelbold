@@ -1,3 +1,6 @@
+Trommelbold
+================================================
+
 The 2016 Trommelbold workshop at Fablab Bayreuth
 
 http://wiki.fablab-bayreuth.de/projekte:fabclap
