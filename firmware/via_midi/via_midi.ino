@@ -6,7 +6,7 @@
 // By default, we use our own software serial implementation for midi i/o, since the version
 // from the Arduino library has some severe deficiencies (eg. completly blocks while sending
 // and receiving.
-#define  USE_ARDUINO_SOFT_SERIAL  1  // set to 1 to use the built-in arduino software serial
+#define  USE_ARDUINO_SOFT_SERIAL  0  // set to 1 to use the built-in arduino software serial
 
 //=============================================================================================================
 // Midi stuff
