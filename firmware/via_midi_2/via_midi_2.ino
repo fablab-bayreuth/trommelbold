@@ -7,7 +7,7 @@
 
 //============================================================================
 
-#include "midi_serial_class.h"
+#include "midi_serial.h"
 MidiSoftwareSerial  midi_soft_serial;
 
 #include <MIDI.h>
