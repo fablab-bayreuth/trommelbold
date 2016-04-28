@@ -1,7 +1,7 @@
 
 
 /*
- * Unser development.
+ * Under development.
  * Midi with a custom software serial implementation with non-blocking read/write.
  */
 
@@ -20,7 +20,7 @@ void setup() {
   midi_soft_serial.begin();
 
   MIDI.begin(MIDI_CHANNEL_OMNI);
-  // MIDI.turnThruOff();  // midi through should work non-blocking now
+  MIDI.turnThruOff();  // midi through should work non-blocking now
 }
 
 
@@ -40,29 +40,20 @@ void loop() {
   }
 #endif
 
-#if 0  // test receive
+#if 1  // test receive
   while (midi_rx_available())
   {
     uint8_t in = midi_rx_read();
     if (midi_tx_available)
       midi_tx_write(in);
     Serial.print("RX: ");
-    Serial.print(to_hex((in>>4)&0x0f));
-    Serial.println(to_hex(in&0x0f));
+    Serial.println(in, HEX);
   }
 #endif
 
 }
 
 
-
-
-char to_hex(uint8_t in)
-{
-  if (in>16) return ' ';
-  if (in<10) return '0'+in;
-  else return 'A'+in-10;
-}
 
 //=====================================================================================================
 
