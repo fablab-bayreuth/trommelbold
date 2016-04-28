@@ -14,14 +14,15 @@ n_steps = 16
 n_channels = 8
 
 # MIDI settings
+enable_midi = 1   # can be disabled if your system does not support the api
 play_midi = 1
 midi_channel = 10  # gm drumset
 midi_notes = [ 52, 44, 42, 80, 70, 69, 38, 36 ]  # see gm drum sound table
-midi_device = 1  # On my Macbook: Internal wavetable synth
+midi_def_device = 1  # On my Macbook: Internal wavetable synth
 
-#Trommelbold
-play_drumbold = 1
-drumbold_port = 'COM6'
+# Trommelbold via serial port
+play_trbold = 1
+trbold_def_port = 'COM6'
 
 # Audio output
 play_click = 0
@@ -46,7 +47,7 @@ else: timer = time.time  # on linux, clock() is the cpu time, while time() is th
 
 import pygame
 os.environ['SDL_VIDEO_CENTERED'] = '1'
-pygame.mixer.pre_init( buffer=32)
+pygame.mixer.pre_init( buffer=32 )
 pygame.init()
 if fullscreen:
     screen = pygame.display.set_mode( (0,0), pygame.FULLSCREEN )    
@@ -66,30 +67,46 @@ font_normal = pygame.font.SysFont('default', 30)
 # Midi
 # -----------------------------------------------------------------------------
 
-if play_midi:
+if enable_midi:
     import pygame.midi
     pygame.midi.init()
-    if midi_device != None:
-        midi_device = pygame.midi.get_default_output_id()
-    midi_out = pygame.midi.Output(midi_device)
-Note_On = lambda key, vel: (0x90+((midi_channel-1)&0x0f), key&0x7f, vel&0x7f)
-Program_Change = lambda prog: (0xC0+((midi_channel-1)&0x0f), prog&0x7f )
+    midi_out = None
+    
+    midi_devices = []   # Enumerate output devices 
+    for id in range(pygame.midi.get_count()):
+        intf, name, inp, outp, op = pygame.midi.get_device_info(id)
+        if outp: midi_devices.append([name,id])
+        
+    if midi_def_device in [id for (name,id) in midi_devices]:
+        midi_out = pygame.midi.Output(midi_def_device)
 
-##midi_program = 119
-##midi_out.write_short( *Program_Change(midi_program-1) )
+    def midi_out_is_open():
+        try:
+            return pygame.midi.get_device_info(midi_out.device_id)[4]
+        except: return False
+
+    Note_On = lambda key, vel: (0x90+((midi_channel-1)&0x0f), key&0x7f, vel&0x7f)
+    Program_Change = lambda prog: (0xC0+((midi_channel-1)&0x0f), prog&0x7f )
+
+    def send_midi( chan ):
+        if play_midi and midi_out_is_open():
+            midi_out.write_short( *Note_On(midi_notes[chan], 127) )
+
 
 
 # -----------------------------------------------------------------------------
 # Trommelbold via serial
 # -----------------------------------------------------------------------------
 
-if play_drumbold:
-    import serial
-    drumbold_ser = serial.Serial( drumbold_port, baudrate=19200 )
+import trbold_com
+trbold = trbold_com.TrommelboldCom()
+trbold_ports = trbold_com.list_ports()
+if trbold_def_port in trbold_ports:
+    trbold.open( trbold_def_port )
 
-def send_drumbold( chan ):
-    if play_drumbold:
-        drumbold_ser.write( str(chan+1)+'\r' )
+def send_trbold( chans ):
+    if play_trbold and trbold.is_open():
+            trbold.hit( chans )
 
 
 # -----------------------------------------------------------------------------
@@ -111,64 +128,120 @@ from pgu import gui as pgui
 gui = pgui.App()
 gui_cnt = pgui.Container(width=W, height=H)
 
+
 # ---- BPM-slider ----------------------------------
 
-def on_slider_bpm(slider_bpm):
+def on_slider_bpm(_widget):
     global bpm
-    slider_bpm_label.set_text( "%d BPM" % int(slider_bpm.value) )
-    bpm = int(slider_bpm.value)
+    slider_bpm_label.set_text( "%d BPM" % int(_widget.value) )
+    bpm = int(_widget.value)
 
 slider_bpm_label = pgui.Label("%d BPM" %bpm , font=font_normal, color=(230,230,230))
 slider_bpm = pgui.HSlider(value=120, min=30, max=360, size=32, width=300, height=20 )
-slider_bpm.connect(pgui.CHANGE, on_slider_bpm, slider_bpm)
+slider_bpm.connect(pgui.CHANGE, on_slider_bpm)
 gui_cnt.add(slider_bpm_label, W-30-300, 20)
 gui_cnt.add(slider_bpm,       W-30-300, 50)
 
 
 # ---- MIDI-Out select box ----------------------------------
-##
-##def on_select_midi(select_midi):
-##    global midi_out
-##    print 'Select midi device:', select_midi.value
-##    if play_midi:
-##        midi_out.close()
-##        midi_out = pygame.midi.Output( select_midi.value )
-##    
-##def select_midi_fill(select_midi, crop=1):
-##    if not play_midi:
-##        select_midi.add( 'Disabled', 0 )
-##        return
-##    for id in range( pygame.midi.get_count() ):
-##        intf, name, inp, outp, op = pygame.midi.get_device_info(id)
-##        if outp:
-##            select_midi.add( '%d: %s' % ( id, name.replace('Microsoft','')[:13] ),
-##                             id )
-##
-##select_midi_label = pgui.Label("MIDI-Out" , font=font_normal, color=(230,230,230))
-##select_midi = pgui.Select(value=midi_device, width=180, height=20 )
-##select_midi_fill(select_midi)
-##select_midi.connect(pgui.CHANGE, on_select_midi, select_midi)
-##gui_cnt.add(select_midi_label, W-30-510, 20)
-##gui_cnt.add(select_midi,       W-30-510, 50)
+if enable_midi:
+    def on_select_midi(_widget):
+        global midi_out
+        if _widget.value != 'None':
+            print 'Select midi output:', _widget.value
+            if midi_out_is_open(): midi_out.close()
+            midi_out = pygame.midi.Output( _widget.value )
+        else:
+            print 'Close midi output'
+            midi_out.close()
+        
+    def select_midi_fill(select_midi, crop=1):
+        select_midi.add('--None--','None')  # make sure there is at least one entry
+        for (name, id) in midi_devices:
+            select_midi.add( str(id)+' :'+name.replace('Microsoft','')[:13], id)
+        if midi_out_is_open():
+            select_midi.value = midi_out.device_id
+        else: select_midi.value = 'None'
+                            
+    select_midi_label = pgui.Label("MIDI" , font=font_normal, color=(230,230,230))
+    select_midi = pgui.Select(width=180, height=20 )
+    select_midi_fill(select_midi)
+    select_midi.connect(pgui.CHANGE, on_select_midi)
+
+    def on_switch_midi(_widget):
+        global play_midi
+        if (_widget.value):
+            print 'Play MIDI on'
+            play_midi = 1
+        else:
+            print 'Play MIDI off'
+            play_midi = 0
+    switch_midi = pgui.Switch()
+    switch_midi.connect(pgui.CHANGE, on_switch_midi)
+    if play_midi: switch_midi.value = 1
+
+    gui_cnt.add(select_midi_label, W-30-630, 25+3)
+    gui_cnt.add(switch_midi,       W-30-555, 25+3)
+    gui_cnt.add(select_midi,       W-30-530, 25)
+
+
+# ---- Trommelbold serial out select box ------------------------------
+def on_select_trbold_change(_widget):
+    if _widget.value != 'None':
+        print 'Select Trommelbold on port', _widget.value
+        trbold.open(_widget.value)
+    else:
+        print 'Close Trommelbold'
+        trbold.close()
+        
+def select_trbold_fill(select_trbold):
+    select_trbold.add('--None--','None')  # make sure there is at least one entry
+    for p in trbold_ports: select_trbold.add(p,p)
+    if trbold.is_open():
+        select_trbold.value = trbold.portname
+    else: select_trbold.value = 'None'
+    
+select_trbold_label = pgui.Label("T-Bold" , font=font_normal, color=(230,230,230))
+select_trbold = pgui.Select(width=180, height=20 )
+select_trbold_fill( select_trbold )
+select_trbold.connect(pgui.CHANGE, on_select_trbold_change)
+
+def on_switch_trbold_change(_widget):
+    global play_trbold
+    if (_widget.value):
+        print 'Play Trommelbold on'
+        play_trbold = 1
+    else:
+        print 'Play Trommelbold off'
+        play_trbold = 0
+switch_trbold = pgui.Switch()
+switch_trbold.connect(pgui.CHANGE, on_switch_trbold_change)
+if play_trbold: switch_trbold.value = 1
+
+gui_cnt.add(select_trbold_label, W-30-630, 55+3)
+gui_cnt.add(switch_trbold,       W-30-555, 55+3)
+gui_cnt.add(select_trbold,       W-30-530, 55)
+
 
 # ---- Run/Stop-Button ------------------------------
 
-def on_button_run(button_run):
+def on_button_run(_widget):
     global seq_run
-    if seq_run: seq_run = 0; button_run.value = 'Play'
-    else: seq_run = 1; button_run.value = 'Stop'
+    if seq_run: seq_run = 0; _widget.value = 'Play'
+    else: seq_run = 1; _widget.value = 'Stop'
     
 button_run = pgui.Button('Play', width=60, height=50)
-button_run.connect(pgui.CLICK, on_button_run, button_run)
+button_run.connect(pgui.CLICK, on_button_run)
 gui_cnt.add( button_run, 30, 25 )
+
 
 # ---- Clear-Button ------------------------------
 
-def on_button_clear(button_clear):
+def on_button_clear(_widget):
     key_matrix.set_all(0)
     
 button_clear = pgui.Button('Clear', width=60, height=50)
-button_clear.connect(pgui.CLICK, on_button_clear, button_clear)
+button_clear.connect(pgui.CLICK, on_button_clear)
 gui_cnt.add( button_clear, 120, 25 )
 
 
@@ -197,25 +270,21 @@ box_filename = pgui.Input(value="Hello there", width = 160, height = 18)
 gui_cnt.add( box_filename, 220, 25 )
 
 
-# ---- Bank select-Radio buttons ------------------------------
+### ---- Bank select-Radio buttons ------------------------------
+##
+##radio_bank_label = pgui.Label("Bank" , font=font_normal, color=(230,230,230))
+##group_bank = pgui.Group(name='bank_select', value=0)
+##table_bank = pgui.Table(width=200, height=20)
+##table_bank.tr()
+##for i in range(10):
+##    if i%5 == 0:
+##        table_bank.td( pgui.Spacer(width=10, height=20) )
+##    table_bank.td( pgui.Radio(group_bank, i) )
+##    
+##
+##gui_cnt.add( radio_bank_label, 420, 25 )
+##gui_cnt.add( table_bank, 420, 55 )
 
-radio_bank_label = pgui.Label("Bank" , font=font_normal, color=(230,230,230))
-group_bank = pgui.Group(name='bank_select', value=0)
-table_bank = pgui.Table(width=200, height=20)
-table_bank.tr()
-for i in range(10):
-    if i%5 == 0:
-        table_bank.td( pgui.Spacer(width=10, height=20) )
-    table_bank.td( pgui.Radio(group_bank, i) )
-    
-
-gui_cnt.add( radio_bank_label, 420, 25 )
-gui_cnt.add( table_bank, 420, 55 )
-
-
-
-##filename
-##bank
 
 
 gui.init( gui_cnt, screen )
@@ -281,7 +350,8 @@ try:
                 ##print 'Mouse down at', event.pos
                 key = key_matrix.click(event.pos)
                 if key:
-                    midi_out.write_short( *Note_On(midi_notes[key.channel], 127) )
+                    if enable_midi and play_midi: send_midi(key.channel)
+                    if play_trbold: send_trbold( key.channel )
             elif event.type == pygame.MOUSEBUTTONUP:
                 ##print 'Mouse up at', event.pos
                 pass
@@ -311,17 +381,19 @@ try:
                 if seq_step%8==0: tick.play()
                 else: tack.play()
             
-            if play_midi:
+            if enable_midi and play_midi:
                 # For a drum set, we only send Note On events
                 for key in key_matrix.get_keys(seq_step):
                     if key.active:
-                        print 'Play', midi_notes[key.channel]
-                        midi_out.write_short( *Note_On(midi_notes[key.channel], 127) )
+                        send_midi( key.channel )
 
             # Trommelbold
-            for n,key in enumerate( key_matrix.get_keys(seq_step) ):
-                if key.active:
-                    send_drumbold(n) 
+            if play_trbold:
+                trbold_chans = \
+                    [ n for (n,key) in enumerate( key_matrix.get_keys(seq_step) ) \
+                         if key.active ]
+                send_trbold( trbold_chans )
+            
                         
         # Screen
         screen.fill((0,0,0))
