@@ -86,7 +86,7 @@ class TrommelboldCom(object):
         if isinstance(chan, int):
             msg = 'h%d' % chan
         else:
-            try: msg = ''.join( ['h%d'%int(ch) for ch in chan] )
+            try: msg = '' + ''.join( ['h%d'%int(ch) for ch in chan] )
             except: print 'Error: invalid channel list:' + str(chan)
         self.write( msg )
 

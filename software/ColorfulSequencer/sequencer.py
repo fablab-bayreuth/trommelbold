@@ -352,7 +352,7 @@ try:
                 key = key_matrix.click(event.pos)
                 if key:
                     if enable_midi and play_midi: send_midi(key.channel)
-                    if play_trbold: send_trbold( key.channel )
+                    if play_trbold: send_trbold( key.channel+1 )
             elif event.type == pygame.MOUSEBUTTONUP:
                 ##print 'Mouse up at', event.pos
                 pass
@@ -391,7 +391,7 @@ try:
             # Trommelbold
             if play_trbold:
                 trbold_chans = \
-                    [ n for (n,key) in enumerate( key_matrix.get_keys(seq_step) ) \
+                    [ n+1 for (n,key) in enumerate( key_matrix.get_keys(seq_step) ) \
                          if key.active ]
                 send_trbold( trbold_chans )
             
