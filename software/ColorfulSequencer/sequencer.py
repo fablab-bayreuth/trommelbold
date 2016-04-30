@@ -105,6 +105,7 @@ if trbold_def_port in trbold_ports:
     trbold.open( trbold_def_port )
 
 def send_trbold( chans ):
+    if not chans: return
     if play_trbold and trbold.is_open():
             trbold.hit( chans )
 

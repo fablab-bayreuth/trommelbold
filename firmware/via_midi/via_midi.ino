@@ -79,7 +79,8 @@ void midi_tick()
                 chan = midi_note_to_drum(note);
                 if (chan>=0) {
                     if (stat == midi::NoteOn)  
-                         drum.hit( chan, vel );
+                         //drum.hit( chan, vel );
+                         drum.hit( chan, 20 );
                     else drum.release( chan );
                 }
             break;

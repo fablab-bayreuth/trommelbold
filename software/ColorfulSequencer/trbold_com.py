@@ -57,6 +57,7 @@ class TrommelboldCom(object):
         if not self.is_open():
             print 'Error: cannot write, serial port not open.'
             return
+        if not isinstance(data,str): return
         if not (data[-1] in ['\r', '\n'] ):
             data += '\r'
         self._port.write(data)

@@ -10,7 +10,7 @@
 
 #define  N_CHAN             8    // number of attached drum channels
 #define  DEF_DRUM_PORTS     {6, 7, 8, 9, 10, 11, 12, 13}
-#define  DEF_BEAT_DURATION  50   // ms
+#define  DEF_BEAT_DURATION  20   // ms
 #define  MAX_BEAT_DURATION  250
 #define  MAX_BEATS          2    // maximum number of simultaneous beats
 
