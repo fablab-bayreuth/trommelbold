@@ -172,7 +172,7 @@ int midi_rx_read(void)
 
 int midi_rx_peek(void)
 {
-  if (rx_queue > 0)
+  if (rx_queue_n > 0)
     return rx_queue[rx_queue_get];
   else  // queue empty
     return -1;
