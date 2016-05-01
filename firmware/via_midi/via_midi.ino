@@ -79,8 +79,7 @@ void midi_tick()
                 chan = midi_note_to_drum(note);
                 if (chan>=0) {
                     if (stat == midi::NoteOn)  
-                         //drum.hit( chan, vel );
-                         drum.hit( chan, 20 );
+                         else drum.hit( chan, 20 );
                     else drum.release( chan );
                 }
             break;
@@ -88,19 +87,19 @@ void midi_tick()
     }
 }
 
-
+#define MIDI_BASE_NOTE  60-12
 int8_t midi_note_to_drum(uint8_t note)
 {
     switch (note)
     {
-        case 60: return 0;  // = C on middle octave
-        case 62: return 1;
-        case 64: return 2;
-        case 65: return 3;
-        case 67: return 4;
-        case 69: return 5;
-        case 71: return 6;
-        case 72: return 7;
+        case MIDI_BASE_NOTE +  0: return 0;
+        case MIDI_BASE_NOTE +  2: return 1;
+        case MIDI_BASE_NOTE +  4: return 2;
+        case MIDI_BASE_NOTE +  5: return 3;
+        case MIDI_BASE_NOTE +  7: return 4;
+        case MIDI_BASE_NOTE +  9: return 5;
+        case MIDI_BASE_NOTE + 11: return 6;
+        case MIDI_BASE_NOTE + 12: return 7;
     }
     return -1;
 }
