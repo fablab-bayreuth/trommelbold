@@ -10,14 +10,16 @@ window_caption = 'Sequencer'
 bpm = 120  # Beats per minute
 
 # Key matrix
-n_steps = 16
-n_channels = 8
+n_steps = 32 ##16
+n_channels = 16 ##8
 
 # MIDI settings
 enable_midi = 1   # can be disabled if your system does not support the api
 play_midi = 1
 midi_channel = 10  # gm drumset
-midi_notes = [ 52, 44, 42, 80, 70, 69, 38, 36 ]  # see gm drum sound table
+##midi_notes = [ 52, 44, 42, 80, 70, 69, 38, 36 ]  # see gm drum sound table
+midi_notes = [ 60-12, 62-12, 64-12, 65-12, 67-12, 69-12, 71-12, 72-12,
+               60+12, 62+12, 64+12, 65+12, 67+12, 69+12, 71+12, 72+12 ]
 midi_def_device = 1  # On my Macbook: Internal wavetable synth
 
 # Trommelbold via serial port
@@ -28,7 +30,7 @@ trbold_def_port = 'COM6'
 play_click = 0
 
 # Desired repetition interval for main loop
-main_dt = 0.05  
+main_dt = 0.005
 
 
 #--------------------------------------------------------------------------
@@ -138,7 +140,7 @@ def on_slider_bpm(_widget):
     bpm = int(_widget.value)
 
 slider_bpm_label = pgui.Label("%d BPM" %bpm , font=font_normal, color=(230,230,230))
-slider_bpm = pgui.HSlider(value=120, min=30, max=360, size=32, width=300, height=20 )
+slider_bpm = pgui.HSlider(value=120, min=30, max=900, size=32, width=300, height=20 )
 slider_bpm.connect(pgui.CHANGE, on_slider_bpm)
 gui_cnt.add(slider_bpm_label, W-30-300, 20)
 gui_cnt.add(slider_bpm,       W-30-300, 50)
@@ -159,7 +161,7 @@ if enable_midi:
     def select_midi_fill(select_midi, crop=1):
         select_midi.add('--None--','None')  # make sure there is at least one entry
         for (name, id) in midi_devices:
-            select_midi.add( str(id)+' :'+name.replace('Microsoft','')[:13], id)
+            select_midi.add( str(id)+': '+name.replace('Microsoft ','')[:13], id)
         if midi_out_is_open():
             select_midi.value = midi_out.device_id
         else: select_midi.value = 'None'
@@ -352,7 +354,9 @@ try:
                 key = key_matrix.click(event.pos)
                 if key:
                     if enable_midi and play_midi: send_midi(key.channel)
-                    if play_trbold: send_trbold( key.channel+1 )
+                    if play_trbold:
+                        send_trbold( key.channel+1 )
+                        print 'trbold:', key.channel+1
             elif event.type == pygame.MOUSEBUTTONUP:
                 ##print 'Mouse up at', event.pos
                 pass
@@ -375,7 +379,7 @@ try:
         if seq_running and timer() >= seq_t_next:
             seq_step += 1
             seq_step %= n_steps
-            print seq_step, '  +%d ms' % int(1e3*(timer()-seq_t_next))
+            ##print seq_step, '  +%d ms' % int(1e3*(timer()-seq_t_next))
             seq_t_next +=  60./bpm  # time of next beat
 
             if play_click:
@@ -394,6 +398,7 @@ try:
                     [ n+1 for (n,key) in enumerate( key_matrix.get_keys(seq_step) ) \
                          if key.active ]
                 send_trbold( trbold_chans )
+                print 'trbold:', trbold_chans
             
                         
         # Screen
@@ -407,7 +412,9 @@ try:
         if main_t_next == None: main_t_next = timer()
         main_t_next += main_dt
         while timer() < main_t_next:
-            if timer()<main_t_next-0.02: time.sleep(0.001)
+            if timer()<main_t_next-0.02:
+                pass
+                ##time.sleep(0.001)
             else: pass
                 
 

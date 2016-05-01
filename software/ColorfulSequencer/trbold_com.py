@@ -61,6 +61,7 @@ class TrommelboldCom(object):
         if not (data[-1] in ['\r', '\n'] ):
             data += '\r'
         self._port.write(data)
+        print 'trbold_com write:',data
 
     def readline(self):
         if not self.is_open():
