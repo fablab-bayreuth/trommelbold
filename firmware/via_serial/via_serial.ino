@@ -79,21 +79,21 @@ void eval_serial_cmd( const char* cmd )
     else  // drum command
     {
         char c;
-        for (uint8_t i=0; c=cmd[i]; i++)
+        while (c = *cmd++)
         {
-            if (c >= '1' && c <= '8')   // plain number --> hit channel
-            {
+            if (c >= '1' && c <= '8')  { // plain number --> hit channel
                 drum.hit( c - '1' );
             }
             else if (c=='h' || c=='r') {
-                int chan = atoi( &cmd[i+1] );
+                int chan = atoi( cmd );
                 if (chan > 0) {
                     if (c=='h') drum.hit(chan-1);      // h<i> --> hit channel i
                     if (c=='r') drum.release(chan-1);  // r<i> --> release channel i
                 }
-                while (c=cmd[++i])   // skip number 
-                    if (!isdigit(c)) 
-                        break;
+                while (c = *cmd) {  // skip number
+                    if (isdigit(c)) cmd++;
+                    else break;
+                }
             }
         }
     }

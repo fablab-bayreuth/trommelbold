@@ -40,7 +40,7 @@ class Trommelbold
 //---------------------------------------------------------------------------------------------------------------
 
     Trommelbold() :
-      drum_ports(DEF_DRUM_PORTS), def_beat_duration(DEF_BEAT_DURATION),
+      drum_ports DEF_DRUM_PORTS, def_beat_duration(DEF_BEAT_DURATION),
       max_beat_duration(MAX_BEAT_DURATION), max_active_beats(MAX_BEATS), n_active_beats(0)
       {
         // Intialize channels
@@ -72,7 +72,7 @@ class Trommelbold
           {
             // Too many simulatneous beats. Release oldest
             uint32_t max_age = 0, now = millis();
-            uint8_t  oldest = -1;
+            int8_t  oldest = -1;
             for (uint8_t ch=0; ch<N_CHAN; ch++)
             {
               if (chan_state[ch].active)

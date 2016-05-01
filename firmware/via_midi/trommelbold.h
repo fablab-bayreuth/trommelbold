@@ -10,9 +10,9 @@
 
 #define  N_CHAN             8    // number of attached drum channels
 #define  DEF_DRUM_PORTS     {6, 7, 8, 9, 10, 11, 12, 13}
-#define  DEF_BEAT_DURATION  50   // ms
+#define  DEF_BEAT_DURATION  20   // ms
 #define  MAX_BEAT_DURATION  250
-#define  MAX_BEATS          2    // maximum number of simultaneous beats
+#define  MAX_BEATS          3    // maximum number of simultaneous beats
 
 //=============================================================================================================
 
@@ -40,7 +40,7 @@ class Trommelbold
 //---------------------------------------------------------------------------------------------------------------
 
     Trommelbold() :
-      drum_ports(DEF_DRUM_PORTS), def_beat_duration(DEF_BEAT_DURATION),
+      drum_ports DEF_DRUM_PORTS, def_beat_duration(DEF_BEAT_DURATION),
       max_beat_duration(MAX_BEAT_DURATION), max_active_beats(MAX_BEATS), n_active_beats(0)
       {
         // Intialize channels
@@ -72,7 +72,7 @@ class Trommelbold
           {
             // Too many simulatneous beats. Release oldest
             uint32_t max_age = 0, now = millis();
-            uint8_t  oldest = -1;
+            int8_t  oldest = -1;
             for (uint8_t ch=0; ch<N_CHAN; ch++)
             {
               if (chan_state[ch].active)
