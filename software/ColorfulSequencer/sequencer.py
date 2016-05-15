@@ -73,12 +73,15 @@ if enable_midi:
     import pygame.midi
     pygame.midi.init()
     midi_out = None
-    
-    midi_devices = []   # Enumerate output devices 
-    for id in range(pygame.midi.get_count()):
-        intf, name, inp, outp, op = pygame.midi.get_device_info(id)
-        if outp: midi_devices.append([name,id])
-        
+
+    def list_midi_devices():
+        devices = []   # Enumerate output devices 
+        for id in range(pygame.midi.get_count()):
+            intf, name, inp, outp, op = pygame.midi.get_device_info(id)
+            if outp: devices.append([name,id])
+        return devices
+            
+    midi_devices = list_midi_devices()        
     if midi_def_device in [id for (name,id) in midi_devices]:
         midi_out = pygame.midi.Output(midi_def_device)
 
@@ -131,6 +134,10 @@ from pgu import gui as pgui
 gui = pgui.App()
 gui_cnt = pgui.Container(width=W, height=H)
 
+# The pgui.Select widget misses a handy clear method
+def select_clear(self): self.values = []; self.options.clear()   
+pgui.Select.clear = select_clear
+
 
 # ---- BPM-slider ----------------------------------
 
@@ -160,8 +167,10 @@ if enable_midi:
             midi_out.close()
         
     def select_midi_fill(select_midi, crop=1):
+        select_midi.clear()
         select_midi.add('--None--','None')  # make sure there is at least one entry
-        for (name, id) in midi_devices:
+        ##for (name, id) in midi_devices:      # uses midi device lst assembled at program start
+        for (name, id) in list_midi_devices():  # uses currently available devices
             select_midi.add( str(id)+': '+name.replace('Microsoft ','')[:13], id)
         if midi_out_is_open():
             select_midi.value = midi_out.device_id
@@ -200,8 +209,11 @@ def on_select_trbold_change(_widget):
         trbold.close()
         
 def select_trbold_fill(select_trbold):
+    select_trbold.clear()
     select_trbold.add('--None--','None')  # make sure there is at least one entry
-    for p in trbold_ports: select_trbold.add(p,p)
+    ##for p in trbold_ports: select_trbold.add(p,p)  # uses trbold list assembled at program start
+    for p in trbold_com.list_ports():   # uses currently available ports
+        select_trbold.add(p,p) 
     if trbold.is_open():
         select_trbold.value = trbold.portname
     else: select_trbold.value = 'None'
@@ -291,7 +303,6 @@ gui_cnt.add( box_filename, 220, 25 )
 ##gui_cnt.add( table_bank, 420, 55 )
 
 
-
 gui.init( gui_cnt, screen )
 
 # -----------------------------------------------------------------------------
@@ -304,7 +315,6 @@ key_matrix = KeyMatrix( n_steps, n_channels )
 ##key_matrix.place( screen, screen.get_rect() )
 key_matrix.place( screen, (0, H1, W, H-H1) )
 
-
 # -----------------------------------------------------------------------------
 # Load startup sequence
 # -----------------------------------------------------------------------------
@@ -313,7 +323,7 @@ try: key_matrix.set_matrix( loadtxt('sequence.dat', dtype=int) )
 except: print 'Error loading sequence'
 
 # -----------------------------------------------------------------------------
-# Main loop
+# Main loop state
 # -----------------------------------------------------------------------------
 
 main_run = 1           # Set to 0 in main loop to terminate program
@@ -333,9 +343,10 @@ def seq_start():
 def seq_stop():
     global seq_run
     if seq_run: seq_run = 0; button_run.value = 'Play'
-    
 
-
+# -----------------------------------------------------------------------------
+# Main loop 
+# -----------------------------------------------------------------------------
 
 try:
     
@@ -370,7 +381,7 @@ try:
                     if enable_midi and play_midi: send_midi(key.channel)
                     if play_trbold:
                         send_trbold( key.channel+1 )
-                        print 'trbold:', key.channel+1
+                        ##print 'trbold:', key.channel+1
             elif event.type == pygame.MOUSEBUTTONUP:
                 ##print 'Mouse up at', event.pos
                 pass
