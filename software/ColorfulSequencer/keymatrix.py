@@ -59,22 +59,28 @@ class KeyMatrix:
 
     def place( self, surface, rect ):
         """Place Keyboard matrix on given surface inside a given rect.
-        This is where it will be rawn by draw()."""
+        There it will be drawn by draw()."""
 
         self.surface = surface
         self.rect = rect
         
         X0,Y0, W, H = rect
-        margin = 5  # (pixels around colored key rect)
+        margin = 5   # around colored key buttons
+        cluster = 4  # every <cluster> buttons, we double the margin
         nx, ny = self.nsteps, self.nchannels  # number of rows, columns
-        w = int( (W-(nx+1)*margin)/nx )  # width of one key rect 
-        h = int( (H-(ny+1)*margin)/ny )  # height
+        cx = (nx+cluster-1)//cluster   # number of clusters
+        cy = (ny+cluster-1)//cluster         
+        # solve to w: W = nx*w + (nx+1)*margin + ((nx+c-1)/c - 1)*margin
+        w = (W - nx*margin - cx*(margin//2)) / nx
+        h = (H - ny*margin - cy*(margin//2)) / ny
+        ## without clusters: w = int( (W-(nx+1)*margin)/nx )  # width of one key rect 
+        ## without clusters: h = int( (H-(ny+1)*margin)/ny )  # height
 
         # Place all key rects
         for k in self.keys:
-            x0 = int( X0 + margin + (w + margin) * k.step )
-            y0 = int( Y0 + margin + (h + margin) * k.channel )
-            k.rect = x0, y0, w, h
+            x = int( X0+margin + (w+margin)*k.step + margin//2*int(k.step//cluster))
+            y = int( Y0+margin + (h+margin)*k.channel + margin//2*int(k.channel//cluster))
+            k.rect = x, y, w, h
             
 
     def draw( self, step=None ):
