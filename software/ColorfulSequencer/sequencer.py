@@ -150,6 +150,7 @@ gui_cnt.add(slider_bpm,       W-30-300, 50)
 if enable_midi:
     def on_select_midi(_widget):
         global midi_out
+        seq_stop()
         if _widget.value != 'None':
             print 'Select midi output:', _widget.value
             if midi_out_is_open(): midi_out.close()
@@ -190,6 +191,7 @@ if enable_midi:
 
 # ---- Trommelbold serial out select box ------------------------------
 def on_select_trbold_change(_widget):
+    seq_stop()
     if _widget.value != 'None':
         print 'Select Trommelbold on port', _widget.value
         trbold.open(_widget.value)
@@ -230,8 +232,8 @@ gui_cnt.add(select_trbold,       W-30-530, 55)
 
 def on_button_run(_widget):
     global seq_run
-    if seq_run: seq_run = 0; _widget.value = 'Play'
-    else: seq_run = 1; _widget.value = 'Stop'
+    if seq_run: seq_stop()
+    else:       seq_start()
     
 button_run = pgui.Button('Play', width=60, height=50)
 button_run.connect(pgui.CLICK, on_button_run)
@@ -322,6 +324,18 @@ seq_running = 0     # Flags that the sequencer is actually running. Do NOT modif
 
 seq_step = None   # Current beat step in sequence
 seq_t_next = None # Timestamp of next beat in sequence
+
+
+def seq_start():
+    global seq_run
+    if not seq_run: seq_run = 1; button_run.value = 'Stop'
+
+def seq_stop():
+    global seq_run
+    if seq_run: seq_run = 0; button_run.value = 'Play'
+    
+
+
 
 try:
     
