@@ -123,7 +123,10 @@ class KeyMatrix:
     def set_matrix( self, m ):
         for i,step in enumerate(self.steps):
             for j,key in enumerate(step):
-                key.set_active( m[i,j] )
+                try: on = m[i][j]
+                except IndexError: on = 0
+                key.set_active( on )
+                
 
     def set_all( self, a ):
         for i,step in enumerate(self.steps):

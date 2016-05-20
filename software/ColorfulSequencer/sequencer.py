@@ -134,7 +134,7 @@ from pgu import gui as pgui
 gui = pgui.App()
 gui_cnt = pgui.Container(width=W, height=H)
 
-# The pgui.Select widget misses a handy clear method
+# The pgui.Select widget lacks a handy clear method
 def select_clear(self): self.values = []; self.options.clear()   
 pgui.Select.clear = select_clear
 
@@ -319,7 +319,13 @@ key_matrix.place( screen, (0, H1, W, H-H1) )
 # Load startup sequence
 # -----------------------------------------------------------------------------
 
-try: key_matrix.set_matrix( loadtxt('sequence.dat', dtype=int) )
+def load_matrix(filename='sequence.dat'):
+    f = open(filename)
+    m = [ [int(d) for d in line.split()] for line in  f.read().splitlines() ]
+    key_matrix.set_matrix( m )
+    f.close()
+
+try: load_matrix()
 except: print 'Error loading sequence'
 
 # -----------------------------------------------------------------------------
@@ -434,13 +440,16 @@ try:
 
 
         # Main loop clock
-        if main_t_next == None: main_t_next = timer()
-        main_t_next += main_dt
-        while timer() < main_t_next:
-            if timer()<main_t_next-0.02:
-                pass
-                ##time.sleep(0.001)
-            else: pass
+        if seq_running:
+            if main_t_next == None: main_t_next = timer()
+            main_t_next += main_dt
+            while timer() < main_t_next:
+                if timer()<main_t_next-0.02:
+                    pass
+                    ##time.sleep(0.001)
+                else: pass
+        else:  # not running
+            time.sleep(0.010)
                 
 
                 
