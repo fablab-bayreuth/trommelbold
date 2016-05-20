@@ -79,7 +79,7 @@ void midi_tick()
                 chan = midi_note_to_drum(note);
                 if (chan>=0) {
                     if (stat == midi::NoteOn)  
-                         else drum.hit( chan, 20 );
+                         drum.hit( chan, 20 );
                     else drum.release( chan );
                 }
             break;
@@ -87,7 +87,7 @@ void midi_tick()
     }
 }
 
-#define MIDI_BASE_NOTE  60-12
+#define MIDI_BASE_NOTE  60
 int8_t midi_note_to_drum(uint8_t note)
 {
     switch (note)
