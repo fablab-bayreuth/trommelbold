@@ -20,23 +20,26 @@ class TrommelboldCom(object):
     def open(self, portname, baudrate=19200):
         if baudrate==None: baudrate=19200
         self.close()
-        print 'Open Trommelbold on port' + portname + '...'
-        self._port = serial.Serial(portname, baudrate=baudrate, timeout=1)
-        # Note: By default, the Arduino resets when opening the Com port, needs
-        #   1-2 seconds to boot. The firmware sends a greeting when up and running.
-        self._port.timeout = 0.05
-        if not self.is_trommelbold():
-            # May be busy booting, wait for greeting message
-            self._port.timeout = 3
-            self.readline()
-            self._port.flushInput()
+        print 'Open Trommelbold on port %s ...' % portname
+        try:
+            self._port = serial.Serial(portname, baudrate=baudrate, timeout=1)
+            # Note: By default, the Arduino resets when opening the Com port, needs
+            #   1-2 seconds to boot. The firmware sends a greeting when up and running.
+            self._port.timeout = 0.05
             if not self.is_trommelbold():
-                # If still not responding, something is wrong
-                self._port.close()
-                print "Error: Did not recognize Trommelbold on port %s" % portname
-                return
-        self.portname = portname
-        print 'Ok'
+                # May be busy booting, wait for greeting message
+                self._port.timeout = 3
+                self.readline()
+                self._port.flushInput()
+                if not self.is_trommelbold():
+                    # If still not responding, something is wrong
+                    self._port.close()
+                    print "Error: Did not recognize Trommelbold on port %s" % portname
+                    return
+            self.portname = portname
+            print 'Ok'
+        except Exception as ex: print 'Error opening port %s: %s' % (portname, str(ex))
+
 
     def is_open(self):
         if self._port != None:
@@ -61,8 +64,7 @@ class TrommelboldCom(object):
         if not (data[-1] in ['\r', '\n'] ):
             data += '\r'
         self._port.write(data)
-        print 'trbold_com write:',data
-
+ 
     def readline(self):
         if not self.is_open():
             print 'Error: cannot read, serial port not open.'
