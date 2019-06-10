@@ -1,4 +1,4 @@
-
+145
 #--------------------------------------------------------------------------
 # Settings
 #--------------------------------------------------------------------------
@@ -10,16 +10,19 @@ window_caption = 'Sequencer'
 bpm = 120  # Beats per minute
 
 # Key matrix
-n_steps = 32 ##16
-n_channels = 16 ##8
+n_steps = 16
+n_channels = 8
 
 # MIDI settings
 enable_midi = 1   # can be disabled if your system does not support the api
 play_midi = 1
 midi_channel = 10  # gm drumset
+shift_notes = 0
 ##midi_notes = [ 52, 44, 42, 80, 70, 69, 38, 36 ]  # see gm drum sound table
-midi_notes = [ 60-12, 62-12, 64-12, 65-12, 67-12, 69-12, 71-12, 72-12,
-               60+12, 62+12, 64+12, 65+12, 67+12, 69+12, 71+12, 72+12 ]
+##midi_notes = [ 60-12, 62-12, 64-12, 65-12, 67-12, 69-12, 71-12, 72-12,
+##               60+12, 62+12, 64+12, 65+12, 67+12, 69+12, 71+12, 72+12 ]
+midi_notes = [ 60, 62, 64, 65, 67, 69, 71, 72,  60+12, 62+12, 64+12, 65+12, 67+12, 69+12, 71+12, 72+12 ]
+midi_notes = [n + shift_notes for n in midi_notes]
 midi_def_device = 1  # On my Macbook: Internal wavetable synth
 
 # Trommelbold via serial port
@@ -213,6 +216,7 @@ def select_trbold_fill(select_trbold):
     select_trbold.add('--None--','None')  # make sure there is at least one entry
     ##for p in trbold_ports: select_trbold.add(p,p)  # uses trbold list assembled at program start
     for p in trbold_com.list_ports():   # uses currently available ports
+        p = str(p)
         select_trbold.add(p,p) 
     if trbold.is_open():
         select_trbold.value = trbold.portname

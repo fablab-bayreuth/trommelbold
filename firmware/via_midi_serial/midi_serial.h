@@ -42,7 +42,7 @@ void midi_tx_flush(void);           // Waits until the ouput buffer has been emp
 //==============================================================================================
 
 /*  MidiSoftwareSerial class is just a C++ wrapper or the midi_serial software serial implementation.
- *  It provides an interface that is code-compatible to Arduino's Serial an SoftwarSerial classes,
+ *  It provides an interface that is code-compatible to Arduino's Serial an SoftwareSerial classes,
  *  and thus can be used with the Arduino MIDI library.
  */
 
@@ -60,7 +60,7 @@ class MidiSoftwareSerial
     
     void begin(unsigned long ignored = 0)
       {
-        bool is_initiated = 0;  // :NOTE: will be shared by all instances. Prevents multible calls to init
+        static bool is_initiated = 0;  // :NOTE: will be shared by all instances. Prevents multible calls to init
         if (!is_initiated)
         {
           midi_rx_init();

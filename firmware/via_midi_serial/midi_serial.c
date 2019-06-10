@@ -1,6 +1,5 @@
 
 //====================================================================================================
-
 /*
  * A simple oftware serial port.
  * Data is received on Arduino pin 2 (RD2), which is also the external INT0 interrupt pin.
@@ -9,11 +8,11 @@
  * ==> PWM on pins 3 and 11 (those are controlled by timer 2) and the attachInterrupt() function 
  *     (uses the INT0 interrupt) can not be used.
  */
- 
 //====================================================================================================
 
 #include "Arduino.h"
 #include "midi_serial.h"
+void dout( const char* msg, int i);
 
 //====================================================================================================
 
@@ -38,7 +37,7 @@ static volatile uint8_t  rx_drop_next;
 
 void midi_rx_init(void)
 {
-  // :NOTE: Race condition aput. The two employed ISRs may enable each others interrupt.
+  // :NOTE: Race condition ahead. The two employed ISRs may enable each others interrupt.
   cli();                                // :NOTE: cli will disable all interrupts, even when occuring simultaneously (unlike on the PIC8 platform).
   EIMSK &= ~(1<<INT0) & ~(1<<INT1);     // disable INTx interrupts
   TIMSK2 &= ~(1<<OCIE2A);               // disable compare A interrupt
@@ -237,6 +236,8 @@ void midi_tx_init(void)
 void midi_tx_write(uint8_t data)
 { 
   if (tx_state == TX_OFF)  midi_tx_init();
+
+    ////dout("TX:", data);
 
   // Store received byte in queue
   if (tx_queue_n >= TX_QUEUE_SIZE)  return;   // on overflow: silently drop this byte
